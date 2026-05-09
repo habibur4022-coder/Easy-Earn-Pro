@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inzar - Admin Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <style>
+        :root { --admin-primary: #00695c; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; padding-bottom: 50px; }
+        .header { background: white; padding: 20px; border-radius: 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h3 { margin-top: 0; color: var(--admin-primary); display: flex; align-items: center; gap: 8px; font-size: 18px; }
+        
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+        .btn { background: var(--admin-primary); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: 5px; }
+        .btn:hover { background: #004d40; }
+        
+        .request-item { background: #fff; border-left: 5px solid #ff9800; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .status-done { border-left-color: #4caf50; opacity: 0.7; }
+        .delete-btn { position: absolute; right: 10px; top: 10px; color: red; cursor: pointer; }
+        
+        .tab-content { display: none; }
+        .active-tab { display: block; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { padding: 10px 20px; background: #ddd; border-radius: 20px; cursor: pointer; white-space: nowrap; font-size: 13px; font-weight: bold; }
+        .tab-btn.active { background: var(--admin-primary); color: white; }
+
+        /* নতুন ফিচারের স্টাইল */
+        .grid-input { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+        .history-item { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 13px; }
+        label { font-size: 13px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="font-size: 20px; font-weight: bold;">Admin Dashboard</div>
+        <span class="material-icons" style="color: var(--admin-primary)">security</span>
+    </div>
+
+    <div class="nav-tabs">
+        <div class="tab-btn active" onclick="openTab('settings')">সেটিংস ও অ্যাড</div>
+        <div class="tab-btn" onclick="openTab('tasks')">Tasks (1-6)</div>
+        <div class="tab-btn" onclick="openTab('withdrawals')">পেমেন্ট রিকোয়েস্ট</div>
+        <div class="tab-btn" onclick="openTab('users')">ইউজার লিস্ট</div>
+        <div class="tab-btn" onclick="openTab('history')">আর্নিং হিস্ট্রি</div>
+    </div>
+
+    <div id="settings" class="tab-content active-tab">
+        <div class="card">
+            <h3><span class="material-icons">campaign</span> নোটিশ বোর্ড</h3>
+            <textarea id="appNotice" placeholder="হোম পেজে কি নোটিশ দেখাবে লিখুন..."></textarea>
+            <button class="btn" onclick="saveSettings()">নোটিশ আপডেট করুন</button>
+        </div>
+
+        <div class="card">
+            <h3><span class="material-icons">ads_click</span> Earn Ad ও ডেইলি টার্গেট</h3>
+            <label>Earn Ad লিঙ্ক:</label>
+            <input type="text" id="adLink" placeholder="https://ad-link-here.com">
+            <label>প্রতি Earn Ad-এ কত পয়েন্ট:</label>
+            <input type="number" id="pointsPerAd" placeholder="যেমন: ১০">
+            <hr>
+            <label>Daily Target (100) বোনাস পয়েন্ট:</label>
+            <input type="number" id="targetBonus" placeholder="যেমন: ৫০">
+            <button class="btn" onclick="saveSettings()">সেভিংস আপডেট করুন</button>
+        </div>
+    </div>
+
+    <div id="tasks" class="tab-content">
+        <div class="card">
+            <h3><span class="material-icons">task</span> Tasks বাটনের লিঙ্ক ও পয়েন্ট</h3>
+            <div id="taskInputs">
+                </div>
+            <button class="btn" onclick="saveTasks()">সব Tasks সেভ করুন</button>
+        </div>
+    </div>
+
+    <div id="withdrawals" class="tab-content">
+        <div class="card">
+            <h3>পেমেন্ট রিকোয়েস্ট তালিকা</h3>
+            <div id="requestList">অপেক্ষা করুন...</div>
+        </div>
+    </div>
+
+    <div id="users" class="tab-content">
+        <div class="card">
+            <h3>ইউজার ম্যানেজমেন্ট ও ব্লক</h3>
+            <div id="userList">লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <div id="history" class="tab-content">
+        <div class="card">
+            <h3><span class="material-icons">history</span> ইউজার কোন মাধ্যমে পয়েন্ট পাচ্ছে</h3>
+            <div id="historyList">লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDITnNoq3Ze_XdcJh-YNEifQ9yhlSlNsl8",
+          authDomain: "easy-earn-pro-b9163.firebaseapp.com",
+          projectId: "easy-earn-pro-b9163",
+          storageBucket: "easy-earn-pro-b9163.firebasestorage.app",
+          messagingSenderId: "288091360425",
+          appId: "1:288091360425:web:05778577f1e628bca0adb8",
+          databaseURL: "https://easy-earn-pro-b9163-default-rtdb.firebaseio.com/"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ৬টি টাস্ক ইনপুট জেনারেট করা
+        const taskContainer = document.getElementById('taskInputs');
+        for(let i=1; i<=6; i++) {
+            taskContainer.innerHTML += `
+                <div style="margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                    <label>Task ${i} লিঙ্ক ও পয়েন্ট:</label>
+                    <div class="grid-input">
+                        <input type="text" id="t${i}Link" placeholder="Link ${i}">
+                        <input type="number" id="t${i}Pts" placeholder="Point">
+                    </div>
+                </div>
+            `;
+        }
+
+        function openTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById(id).classList.add('active-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        // সেটিংস ও টার্গেট সেভ করা
+        function saveSettings() {
+            database.ref('adminSettings').update({
+                notice: document.getElementById('appNotice').value,
+                adLink: document.getElementById('adLink').value,
+                pointsPerAd: document.getElementById('pointsPerAd').value,
+                targetBonus: document.getElementById('targetBonus').value || 0
+            }).then(() => alert("সফলভাবে আপডেট হয়েছে!"));
+        }
+
+        // টাস্ক সেটিংস সেভ করা
+        function saveTasks() {
+            let tasks = {};
+            for(let i=1; i<=6; i++) {
+                tasks['task'+i] = {
+                    link: document.getElementById('t'+i+'Link').value,
+                    points: document.getElementById('t'+i+'Pts').value
+                };
+            }
+            database.ref('adminSettings/tasks').update(tasks).then(() => alert("সব Tasks আপডেট হয়েছে!"));
+        }
+
+        // ডাটা লোড করা
+        database.ref('adminSettings').on('value', (snap) => {
+            const data = snap.val();
+            if(data) {
+                document.getElementById('appNotice').value = data.notice || "";
+                document.getElementById('adLink').value = data.adLink || "";
+                document.getElementById('pointsPerAd').value = data.pointsPerAd || 10;
+                document.getElementById('targetBonus').value = data.targetBonus || 0;
+                if(data.tasks) {
+                    for(let i=1; i<=6; i++) {
+                        if(data.tasks['task'+i]) {
+                            document.getElementById('t'+i+'Link').value = data.tasks['task'+i].link || "";
+                            document.getElementById('t'+i+'Pts').value = data.tasks['task'+i].points || 0;
+                        }
+                    }
+                }
+            }
+        });
+
+        // পেমেন্ট রিকোয়েস্ট লিস্ট
+        database.ref('withdrawRequests').on('value', (snap) => {
+            const listDiv = document.getElementById('requestList');
+            listDiv.innerHTML = "";
+            snap.forEach((child) => {
+                const req = child.val();
+                listDiv.innerHTML += `
+                    <div class="request-item ${req.status === 'Paid' ? 'status-done' : ''}">
+                        <b>${req.name}</b> (${req.number})<br>
+                        পয়েন্ট: ${req.points} | ${req.method}<br>
+                        <button onclick="markAsPaid('${child.key}')">পেইড</button>
+                        <span class="material-icons delete-btn" onclick="deleteReq('${child.key}')">delete</span>
+                    </div>
+                `;
+            });
+        });
+
+        function markAsPaid(id) { database.ref('withdrawRequests/'+id).update({status: 'Paid'}); }
+        function deleteReq(id) { if(confirm("ডিলিট করতে চান?")) database.ref('withdrawRequests/'+id).remove(); }
+
+        // ইউজার লিস্ট
+        database.ref('users').on('value', (snap) => {
+            const userDiv = document.getElementById('userList');
+            userDiv.innerHTML = "";
+            snap.forEach((child) => {
+                const user = child.val();
+                userDiv.innerHTML += `
+                    <div class="card" style="padding:15px; margin-bottom:10px;">
+                        <b>${user.name || 'User'}</b> (ID: ${child.key})<br>
+                        পয়েন্ট: ${user.points || 0}<br>
+                        অবস্থা: ${user.isBlocked ? '<span style="color:red">Blocked</span>' : '<span style="color:green">Active</span>'}<br>
+                        <button onclick="toggleBlock('${child.key}', ${user.isBlocked})">
+                            ${user.isBlocked ? 'Unblock' : 'Block'}
+                        </button>
+                    </div>
+                `;
+            });
+        });
+
+        function toggleBlock(uid, status) { database.ref('users/' + uid).update({ isBlocked: !status }); }
+
+        // আর্নিং হিস্ট্রি লোড করা
+        database.ref('earningLogs').limitToLast(20).on('value', snap => {
+            const list = document.getElementById('historyList');
+            list.innerHTML = "";
+            snap.forEach(child => {
+                const log = child.val();
+                list.innerHTML = `<div class="history-item">
+                    <b>${log.userName}</b> ${log.points} Pts পেয়েছে [${log.source}]<br>
+                    <small>${log.time}</small>
+                </div>` + list.innerHTML;
+            });
+        });
+    </script>
+</body>
+</html>
