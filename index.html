@@ -202,12 +202,11 @@
         let currentPoints = 0;
         let adminSettings = { pointsPerAd: 10, adLink: "", supportUrl: "https://t.me/HabibStudio66", notice: "" };
 
-        // ১. এডমিন সেটিংস লোড (নোটিশ এবং অ্যাড লিঙ্ক আপডেট)
+        // ১. এডমিন সেটিংস লোড
         database.ref('adminSettings').on('value', (snap) => {
             if(snap.val()) {
                 adminSettings = snap.val();
                 
-                // ১. হোম পেজের নোটিশ আপডেট (এটি এডমিন প্যানেল থেকে আসবে)
                 const noticeBox = document.getElementById('appNoticeBox');
                 const noticeText = document.getElementById('appNoticeText');
 
@@ -218,7 +217,6 @@
                     noticeBox.style.display = 'none';
                 }
 
-                // ২. পেমেন্ট পেজের লেখা ফিক্সড রাখা (এটি এডমিন প্যানেলের নোটিশ দিয়ে পরিবর্তন হবে না)
                 const withdrawNotice = document.getElementById('withdrawNotice');
                 if(withdrawNotice) {
                     withdrawNotice.innerText = "১০০০ পয়েন্ট = ১০ BDT (বিকাশ/নগদ)";
@@ -260,22 +258,36 @@
             if(id==='profile') items[4].classList.add('active');
         }
 
+        // --- আপডেট করা watchAd ফাংশন (৩০ সেকেন্ড টাইমারসহ) ---
         function watchAd() {
             if(!adminSettings.adLink) { 
                 alert("অ্যাড এখন পাওয়া যাচ্ছে না। এডমিনকে জানান।"); 
                 return; 
             }
+
+            // স্মার্ট লিঙ্ক ওপেন হবে
             window.open(adminSettings.adLink, '_blank');
             
-            userRef.transaction((current) => {
-                if (!current) current = { points: 0, tasks: 0 };
-                return { 
-                    ...current,
-                    points: (current.points || 0) + parseInt(adminSettings.pointsPerAd || 10),
-                    tasks: (current.tasks || 0) + 1
-                };
-            });
-            alert(adminSettings.pointsPerAd + " পয়েন্ট যোগ হয়েছে!");
+            let timeLeft = 30;
+            alert("অ্যাডটি ওপেন হয়েছে। পয়েন্ট পেতে অন্তত ৩০ সেকেন্ড অপেক্ষা করুন।");
+
+            let timerInterval = setInterval(function() {
+                timeLeft--;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    
+                    userRef.transaction((current) => {
+                        if (!current) current = { points: 0, tasks: 0 };
+                        return { 
+                            ...current,
+                            points: (current.points || 0) + parseInt(adminSettings.pointsPerAd || 10),
+                            tasks: (current.tasks || 0) + 1
+                        };
+                    });
+                    alert("অভিনন্দন! ৩০ সেকেন্ড পূর্ণ হয়েছে এবং " + adminSettings.pointsPerAd + " পয়েন্ট যোগ হয়েছে।");
+                }
+            }, 1000);
         }
 
         function processPay(method) {
@@ -318,8 +330,8 @@
                 if(data && data.tasks >= 100) {
                      userRef.transaction((current) => {
                         if (current) {
-                            current.points += 500; // বোনাস পয়েন্ট
-                            current.tasks = 0; // টাস্ক রিসেট
+                            current.points += 500; 
+                            current.tasks = 0; 
                         }
                         return current;
                     });
