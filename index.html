@@ -80,9 +80,28 @@
         .nav-item { text-align: center; color: #bbb; font-size: 10px; font-weight: bold; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item .material-icons { display: block; font-size: 26px; margin-bottom: 2px; }
+
+        /* --- নতুন টাইমার ওভারলে স্টাইল --- */
+        #adTimerOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); color: white;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 10000; text-align: center;
+        }
+        .timer-circle {
+            width: 100px; height: 100px; border: 6px solid var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 35px; font-weight: bold; margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
+
+    <div id="adTimerOverlay">
+        <div class="timer-circle" id="timerDisplay">30</div>
+        <h3 style="margin:0;">অ্যাড দেখা হচ্ছে...</h3>
+        <p style="padding:0 30px; font-size:14px; color:#ccc; margin-top:10px;">টাইমার শেষ হওয়ার আগে ব্যাক চাপলে পয়েন্ট পাবেন না।</p>
+    </div>
 
     <div class="header">Easy Earn Pro</div>
 
@@ -258,36 +277,49 @@
             if(id==='profile') items[4].classList.add('active');
         }
 
-        // --- আপডেট করা watchAd ফাংশন (৩০ সেকেন্ড টাইমারসহ) ---
+        // --- আপডেট করা সুরক্ষিত watchAd ফাংশন ---
         function watchAd() {
             if(!adminSettings.adLink) { 
                 alert("অ্যাড এখন পাওয়া যাচ্ছে না। এডমিনকে জানান।"); 
                 return; 
             }
 
-            // স্মার্ট লিঙ্ক ওপেন হবে
-            window.open(adminSettings.adLink, '_blank');
-            
-            let timeLeft = 30;
-            alert("অ্যাডটি ওপেন হয়েছে। পয়েন্ট পেতে অন্তত ৩০ সেকেন্ড অপেক্ষা করুন।");
-
-            let timerInterval = setInterval(function() {
-                timeLeft--;
+            // ১. প্রথমে একটি নোটিশ আসবে
+            if(confirm("অ্যাডটি ওপেন হচ্ছে। ৩০ সেকেন্ড অ্যাডটি দেখলে পয়েন্ট পাবেন। আপনি কি রাজি?")) {
                 
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    
-                    userRef.transaction((current) => {
-                        if (!current) current = { points: 0, tasks: 0 };
-                        return { 
-                            ...current,
-                            points: (current.points || 0) + parseInt(adminSettings.pointsPerAd || 10),
-                            tasks: (current.tasks || 0) + 1
-                        };
-                    });
-                    alert("অভিনন্দন! ৩০ সেকেন্ড পূর্ণ হয়েছে এবং " + adminSettings.pointsPerAd + " পয়েন্ট যোগ হয়েছে।");
-                }
-            }, 1000);
+                // ২. স্মার্ট লিঙ্কটি নতুন ট্যাবে ওপেন হবে
+                window.open(adminSettings.adLink, '_blank');
+
+                // ৩. টাইমার ওভারলে (লক স্ক্রিন) দেখানো
+                const overlay = document.getElementById('adTimerOverlay');
+                const timerDisplay = document.getElementById('timerDisplay');
+                overlay.style.display = 'flex';
+
+                let timeLeft = 30;
+                timerDisplay.innerText = timeLeft;
+
+                // ৪. ৩০ সেকেন্ডের টাইমার শুরু
+                let timerInterval = setInterval(function() {
+                    timeLeft--;
+                    timerDisplay.innerText = timeLeft;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        overlay.style.display = 'none'; // টাইমার শেষ হলে ওভারলে বন্ধ
+
+                        // ৫. পয়েন্ট ডাটাবেসে যোগ করা (শুধুমাত্র টাইমার শেষ হলেই এটি কল হবে)
+                        userRef.transaction((current) => {
+                            if (!current) current = { points: 0, tasks: 0 };
+                            return { 
+                                ...current,
+                                points: (current.points || 0) + parseInt(adminSettings.pointsPerAd || 10),
+                                tasks: (current.tasks || 0) + 1
+                            };
+                        });
+                        alert("অভিনন্দন! ৩০ সেকেন্ড পূর্ণ হয়েছে এবং " + adminSettings.pointsPerAd + " পয়েন্ট যোগ হয়েছে।");
+                    }
+                }, 1000);
+            }
         }
 
         function processPay(method) {
