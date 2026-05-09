@@ -207,17 +207,21 @@
             if(snap.val()) {
                 adminSettings = snap.val();
                 
-                // অ্যাপের ভেতর ডাইনামিক নোটিশ দেখানো
+                // ১. হোম পেজের নোটিশ আপডেট (এটি এডমিন প্যানেল থেকে আসবে)
                 const noticeBox = document.getElementById('appNoticeBox');
                 const noticeText = document.getElementById('appNoticeText');
-                const withdrawNotice = document.getElementById('withdrawNotice');
 
                 if(adminSettings.notice && adminSettings.notice.trim() !== "") {
                     noticeBox.style.display = 'block';
                     noticeText.innerText = adminSettings.notice;
-                    if(withdrawNotice) withdrawNotice.innerText = adminSettings.notice;
                 } else {
                     noticeBox.style.display = 'none';
+                }
+
+                // ২. পেমেন্ট পেজের লেখা ফিক্সড রাখা (এটি এডমিন প্যানেলের নোটিশ দিয়ে পরিবর্তন হবে না)
+                const withdrawNotice = document.getElementById('withdrawNotice');
+                if(withdrawNotice) {
+                    withdrawNotice.innerText = "১০০০ পয়েন্ট = ১০ BDT (বিকাশ/নগদ)";
                 }
             }
         });
