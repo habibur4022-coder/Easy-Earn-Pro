@@ -23,10 +23,13 @@
         /* Home - Wallet Card */
         .wallet-card { 
             background: linear-gradient(135deg, #093028 0%, #237a57 100%); 
-            border-radius: 25px; padding: 30px 25px; color: white; margin-bottom: 25px;
+            border-radius: 25px; padding: 30px 25px; color: white; margin-bottom: 15px;
             box-shadow: 0 15px 30px rgba(29,151,108,0.3);
         }
         .wallet-balance { font-size: 40px; font-weight: bold; margin: 10px 0; color: #ffca28; }
+
+        /* Dynamic Notice Box */
+        .app-notice { background: #fff9c4; padding: 12px; margin-bottom: 20px; border-radius: 15px; border-left: 5px solid #fbc02d; font-size: 14px; color: #333; display: none; }
 
         /* Menu Grid */
         .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
@@ -77,18 +80,9 @@
         .nav-item { text-align: center; color: #bbb; font-size: 10px; font-weight: bold; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item .material-icons { display: block; font-size: 26px; margin-bottom: 2px; }
-
-        /* Blocking Overlay */
-        #blockScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; text-align: center; padding-top: 100px; }
     </style>
 </head>
 <body>
-
-    <div id="blockScreen">
-        <span class="material-icons" style="font-size: 80px; color: red;">block</span>
-        <h2>আপনি ব্লক হয়েছেন!</h2>
-        <p>নিয়ম ভঙ্গ করার জন্য আপনাকে সাময়িকভাবে ব্লক করা হয়েছে।</p>
-    </div>
 
     <div class="header">Easy Earn Pro</div>
 
@@ -101,8 +95,12 @@
                 <div style="font-size:11px; background:rgba(255,255,255,0.15); display:inline-block; padding:4px 12px; border-radius:20px;" id="displayUserId">Verified ID: #000000</div>
             </div>
 
+            <div id="appNoticeBox" class="app-notice">
+                <b style="color: #f57f17;">Notice:</b> <span id="appNoticeText"></span>
+            </div>
+
             <div class="menu-grid">
-                <div class="menu-item" onclick="watchAd('main')"><span class="material-icons c1">play_circle</span><span>Earn Ad</span></div>
+                <div class="menu-item" onclick="watchAd()"><span class="material-icons c1">play_circle</span><span>Earn Ad</span></div>
                 <div class="menu-item" onclick="changePage('tasks')"><span class="material-icons c2">assignment</span><span>Tasks</span></div>
                 <div class="menu-item" onclick="changePage('withdraw')"><span class="material-icons c3">account_balance_wallet</span><span>Withdraw</span></div>
                 <div class="menu-item" onclick="changePage('referral')"><span class="material-icons c4">share</span><span>Referral</span></div>
@@ -111,10 +109,10 @@
             </div>
 
             <div class="mission-box">
-                <div class="mission-header"><span>Daily Mission</span><span style="color:var(--primary)" id="targetText">Target: 100</span></div>
+                <div class="mission-header"><span>Daily Mission</span><span style="color:var(--primary)">Target: 100</span></div>
                 <div class="progress-bg"><div class="progress-fill" id="m-fill"></div></div>
                 <div style="font-size:12px; color:#666; margin-bottom:15px;">Completed: <b id="m-count">0</b></div>
-                <button class="claim-btn" id="claimBtn" onclick="claimDailyBonus()">
+                <button class="claim-btn" onclick="claimDaily()">
                     <span class="material-icons" style="color:#ffca28">bolt</span> CLAIM DAILY BONUS
                 </button>
             </div>
@@ -123,12 +121,12 @@
         <div id="tasks" class="page">
             <h3 style="text-align:center;">Available Ads</h3>
             <div class="task-grid">
-                <div class="ad-box" onclick="watchAd(1)"><span class="material-icons">ads_click</span>Task 1</div>
-                <div class="ad-box" onclick="watchAd(2)"><span class="material-icons">ads_click</span>Task 2</div>
-                <div class="ad-box" onclick="watchAd(3)"><span class="material-icons">ads_click</span>Task 3</div>
-                <div class="ad-box" onclick="watchAd(4)"><span class="material-icons">ads_click</span>Task 4</div>
-                <div class="ad-box" onclick="watchAd(5)"><span class="material-icons">ads_click</span>Task 5</div>
-                <div class="ad-box" onclick="watchAd(6)"><span class="material-icons">ads_click</span>Task 6</div>
+                <div class="ad-box" onclick="watchAd()"><span class="material-icons">ads_click</span>Ad 1</div>
+                <div class="ad-box" onclick="watchAd()"><span class="material-icons">ads_click</span>Ad 2</div>
+                <div class="ad-box" onclick="watchAd()"><span class="material-icons">ads_click</span>Ad 3</div>
+                <div class="ad-box" onclick="watchAd()"><span class="material-icons">ads_click</span>Ad 4</div>
+                <div class="ad-box" onclick="watchAd()"><span class="material-icons">ads_click</span>Ad 5</div>
+                <div class="ad-box" onclick="watchAd()"><span class="material-icons">ads_click</span>Ad 6</div>
             </div>
         </div>
 
@@ -174,13 +172,14 @@
 
     <div class="nav-bar">
         <div class="nav-item active" onclick="changePage('home')"><span class="material-icons">home</span>HOME</div>
-        <div class="nav-item" onclick="watchAd('main')"><span class="material-icons">play_circle</span>EARN</div>
+        <div class="nav-item" onclick="watchAd()"><span class="material-icons">play_circle</span>EARN</div>
         <div class="nav-item" onclick="changePage('tasks')"><span class="material-icons">assignment</span>TASKS</div>
         <div class="nav-item" onclick="changePage('withdraw')"><span class="material-icons">wallet</span>WALLET</div>
         <div class="nav-item" onclick="changePage('profile')"><span class="material-icons">person</span>PROFILE</div>
     </div>
 
     <script>
+        // --- ফায়ারবেস কনফিগারেশন ---
         const firebaseConfig = {
           apiKey: "AIzaSyDITnNoq3Ze_XdcJh-YNEifQ9yhlSlNsl8",
           authDomain: "easy-earn-pro-b9163.firebaseapp.com",
@@ -194,46 +193,50 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // টেলিগ্রাম ডাটা
         const tg = window.Telegram.WebApp;
         tg.ready();
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "123456";
         const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "User";
 
         let currentPoints = 0;
-        let totalTasks = 0;
-        let adminSettings = {};
+        let adminSettings = { pointsPerAd: 10, adLink: "", supportUrl: "https://t.me/HabibStudio66", notice: "" };
 
-        // ১. এডমিন সেটিংস এবং ব্লক সিস্টেম
+        // ১. এডমিন সেটিংস লোড (নোটিশ এবং অ্যাড লিঙ্ক আপডেট)
         database.ref('adminSettings').on('value', (snap) => {
-            adminSettings = snap.val() || {};
-            if(adminSettings.supportUrl) window.supportLink = adminSettings.supportUrl;
+            if(snap.val()) {
+                adminSettings = snap.val();
+                
+                // অ্যাপের ভেতর ডাইনামিক নোটিশ দেখানো
+                const noticeBox = document.getElementById('appNoticeBox');
+                const noticeText = document.getElementById('appNoticeText');
+                const withdrawNotice = document.getElementById('withdrawNotice');
+
+                if(adminSettings.notice && adminSettings.notice.trim() !== "") {
+                    noticeBox.style.display = 'block';
+                    noticeText.innerText = adminSettings.notice;
+                    if(withdrawNotice) withdrawNotice.innerText = adminSettings.notice;
+                } else {
+                    noticeBox.style.display = 'none';
+                }
+            }
         });
 
-        // ২. ইউজার ডাটা এবং পয়েন্ট আপডেট
+        // ২. ইউজারের ডাটা লোড ও আপডেট
         const userRef = database.ref('users/' + userId);
         userRef.on('value', (snap) => {
-            const data = snap.val() || { points: 0, tasks: 0, refers: 0, status: 'Active' };
-            
-            // ব্লক চেক
-            if(data.status === 'Blocked') {
-                document.getElementById('blockScreen').style.display = 'block';
-                return;
-            }
-
-            currentPoints = data.points || 0;
-            totalTasks = data.tasks || 0;
+            const data = snap.val() || { points: 0, tasks: 0, refers: 0 };
+            currentPoints = data.points;
             updateUI(data);
         });
 
         function updateUI(data) {
-            document.getElementById('h-bal').innerText = data.points || 0;
-            document.getElementById('p-pts').innerText = data.points || 0;
+            document.getElementById('h-bal').innerText = data.points;
+            document.getElementById('p-pts').innerText = data.points;
             document.getElementById('m-count').innerText = data.tasks || 0;
             document.getElementById('r-count').innerText = data.refers || 0;
             document.getElementById('p-ref').innerText = data.refers || 0;
-            
-            let progress = ( (data.tasks || 0) / 100 ) * 100;
-            document.getElementById('m-fill').style.width = Math.min(progress, 100) + "%";
+            document.getElementById('m-fill').style.width = Math.min((data.tasks || 0), 100) + "%";
             
             document.getElementById('displayUserName').innerText = "HELLO " + userName.toUpperCase();
             document.getElementById('displayUserId').innerText = "Verified ID: #" + userId;
@@ -242,89 +245,57 @@
             document.getElementById('p-id').innerText = "User ID: #" + userId;
         }
 
-        // ৩. অ্যাড দেখা এবং পয়েন্ট যোগ হওয়া
-        function watchAd(type) {
-            let link, point;
-
-            if(type === 'main') {
-                link = adminSettings.earnAdLink;
-                point = parseInt(adminSettings.earnAdPoint || 0);
-            } else {
-                link = adminSettings['task' + type + 'Link'];
-                point = parseInt(adminSettings.taskPoint || 0);
-            }
-
-            if(!link) { alert("অ্যাড লিঙ্ক সেট করা নেই!"); return; }
-
-            window.open(link, '_blank');
-            
-            // পয়েন্ট আপডেট ট্রানজেকশন
-            userRef.transaction((current) => {
-                if (!current) current = { points: 0, tasks: 0 };
-                return { 
-                    ...current,
-                    points: (current.points || 0) + point,
-                    tasks: (current.tasks || 0) + 1
-                };
-            });
-
-            // আর্নিং হিস্ট্রিতে রেকর্ড রাখা
-            const historyRef = database.ref('earningHistory').push();
-            historyRef.set({
-                userId: userId,
-                name: userName,
-                amount: point,
-                type: type === 'main' ? 'Main Ad' : 'Task ' + type,
-                time: new Date().toLocaleString()
-            });
-
-            alert(point + " পয়েন্ট যোগ হয়েছে!");
-        }
-
-        function claimDailyBonus() {
-            if(totalTasks < 100) {
-                alert("বোনাস পেতে অন্তত ১০০টি টাস্ক সম্পন্ন করুন!");
-                return;
-            }
-            
-            let bonus = parseInt(adminSettings.dailyTargetBonus || 0);
-            userRef.transaction((current) => {
-                if (!current) current = { points: 0, tasks: 0 };
-                return { ...current, points: (current.points || 0) + bonus, tasks: 0 };
-            });
-            alert("অভিনন্দন! " + bonus + " বোনাস পয়েন্ট পেয়েছেন। টাস্ক রিসেট হয়েছে।");
-        }
-
         function changePage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
             document.getElementById(id).classList.add('active-page');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const items = document.querySelectorAll('.nav-item');
+            if(id==='home') items[0].classList.add('active');
+            if(id==='tasks') items[2].classList.add('active');
+            if(id==='withdraw') items[3].classList.add('active');
+            if(id==='profile') items[4].classList.add('active');
+        }
+
+        function watchAd() {
+            if(!adminSettings.adLink) { 
+                alert("অ্যাড এখন পাওয়া যাচ্ছে না। এডমিনকে জানান।"); 
+                return; 
+            }
+            window.open(adminSettings.adLink, '_blank');
             
-            const navItems = document.querySelectorAll('.nav-item');
-            if(id==='home') navItems[0].classList.add('active');
-            if(id==='tasks') navItems[2].classList.add('active');
-            if(id==='withdraw') navItems[3].classList.add('active');
-            if(id==='profile') navItems[4].classList.add('active');
+            userRef.transaction((current) => {
+                if (!current) current = { points: 0, tasks: 0 };
+                return { 
+                    ...current,
+                    points: (current.points || 0) + parseInt(adminSettings.pointsPerAd || 10),
+                    tasks: (current.tasks || 0) + 1
+                };
+            });
+            alert(adminSettings.pointsPerAd + " পয়েন্ট যোগ হয়েছে!");
         }
 
         function processPay(method) {
             if(currentPoints < 1000) {
                 alert("নূন্যতম ১০০০ পয়েন্ট প্রয়োজন।");
-                return;
-            }
-            const num = prompt(method + " নাম্বার দিন:");
-            if(num) {
-                const withdrawRef = database.ref('withdrawRequests').push();
-                withdrawRef.set({
-                    userId: userId, name: userName, number: num, method: method,
-                    points: 1000, status: 'Pending', time: new Date().toLocaleString()
-                });
-                
-                userRef.transaction(c => {
-                    if(c) c.points -= 1000;
-                    return c;
-                });
-                alert("পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে!");
+            } else {
+                const num = prompt(method + " নাম্বার দিন:");
+                if(num) {
+                    database.ref('withdrawRequests').push({
+                        userId: userId, 
+                        name: userName, 
+                        number: num, 
+                        method: method,
+                        points: 1000, 
+                        status: 'Pending', 
+                        time: new Date().toLocaleString()
+                    });
+                    
+                    userRef.transaction(c => {
+                        if(c) c.points -= 1000;
+                        return c;
+                    });
+                    alert("পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে!");
+                }
             }
         }
 
@@ -333,9 +304,26 @@
             alert("আপনার রেফার কোড: " + userId + " কপি হয়েছে!");
         }
 
-        function contactSupport() {
-            if(window.supportLink) window.open(window.supportLink, '_blank');
-            else alert("সাপোর্ট লিঙ্ক সেট করা নেই।");
+        function contactSupport() { 
+            window.open(adminSettings.supportUrl || "https://t.me/HabibStudio66", '_blank'); 
+        }
+
+        function claimDaily() {
+            database.ref('users/' + userId).once('value', (snap) => {
+                const data = snap.val();
+                if(data && data.tasks >= 100) {
+                     userRef.transaction((current) => {
+                        if (current) {
+                            current.points += 500; // বোনাস পয়েন্ট
+                            current.tasks = 0; // টাস্ক রিসেট
+                        }
+                        return current;
+                    });
+                    alert("অভিনন্দন! আপনি ৫০০ বোনাস পয়েন্ট পেয়েছেন।");
+                } else {
+                    alert("১০০ টাস্ক পূর্ণ হলে বোনাস ক্লেইম করতে পারবেন!");
+                }
+            });
         }
     </script>
 </body>
